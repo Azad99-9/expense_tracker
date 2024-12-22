@@ -10,7 +10,6 @@ class HomeCalendarScreen extends StackedView<HomeCalendarScreenViewModel> {
 
   @override
   void onViewModelReady(HomeCalendarScreenViewModel model) {
-    // TODO: implement onViewModelReady
     model.initialise();
   }
 
@@ -23,6 +22,7 @@ class HomeCalendarScreen extends StackedView<HomeCalendarScreenViewModel> {
       BuildContext context, HomeCalendarScreenViewModel model, Widget? child) {
     final themeService = Theme.of(context);
     final colorScheme = themeService.colorScheme;
+    final textScheme = themeService.textTheme;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).primaryColor,
@@ -57,17 +57,18 @@ class HomeCalendarScreen extends StackedView<HomeCalendarScreenViewModel> {
       body: Container(
         child: SfCalendar(
           controller: model.calendarController,
+
           cellBorderColor: themeService.colorScheme.secondary.withOpacity(0.5),
           onViewChanged: (details) {
             final visibleDates = details.visibleDates;
-            final currentDate = visibleDates[0];
+            final currentDate = visibleDates[15];
             model.changeappBarMonth(currentDate);
           },
           onTap: model.onTapCell,
-          monthViewSettings: const MonthViewSettings(
-            showTrailingAndLeadingDates:
-                false, // Adjust the width of the border (optional)
-          ),
+          // monthViewSettings: const MonthViewSettings(
+          //   showTrailingAndLeadingDates:
+          //       false, // Adjust the width of the border (optional)
+          // ),
           monthCellBuilder: (BuildContext context, MonthCellDetails details) {
             // Get the date for the cell
             DateTime date = details.date;
@@ -75,10 +76,9 @@ class HomeCalendarScreen extends StackedView<HomeCalendarScreenViewModel> {
             // Check if the cell is today
             bool isToday = DateTime.now().difference(date).inDays == 0 &&
                 DateTime.now().day == date.day;
-
+            bool currentMonth = model.belongsToCurrentMonth(details.date);
             return Container(
               decoration: BoxDecoration(
-                color: colorScheme.surface,
                 border: Border.all(
                     color: colorScheme.secondary.withOpacity(0.4), width: 0.5),
               ),
@@ -96,14 +96,15 @@ class HomeCalendarScreen extends StackedView<HomeCalendarScreenViewModel> {
                       shape: BoxShape.circle,
                     ),
                     child: Center(
-                      child: Text(
-                        date.day.toString(),
-                        style: TextStyle(
-                          color: isToday ? Colors.white : Colors.white,
-                          fontWeight:
-                              isToday ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
+                      child: Text(date.day.toString(),
+                          style: textScheme.bodyMedium!.copyWith(
+                            color: currentMonth
+                                ? colorScheme.onPrimary
+                                : colorScheme.onPrimary.withOpacity(0.3),
+                            fontSize: currentMonth ? 16 : 14,
+                            fontWeight:
+                                isToday ? FontWeight.bold : FontWeight.normal,
+                          )),
                     ),
                   ),
                 ],
@@ -111,6 +112,9 @@ class HomeCalendarScreen extends StackedView<HomeCalendarScreenViewModel> {
             );
           },
           headerHeight: 0,
+          viewHeaderStyle: ViewHeaderStyle(
+            dayTextStyle: textScheme.bodyMedium,
+          ),
           view: CalendarView.month,
         ),
       ),

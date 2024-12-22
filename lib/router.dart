@@ -1,6 +1,7 @@
 import 'package:expense_tracker/constants/routes.dart';
 import 'package:expense_tracker/views/specific_day_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 /// A class to handle route generation throughout the app.
 ///
@@ -16,7 +17,10 @@ class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
       case Routes.specificDay:
-        return MaterialPageRoute(builder: (context) => SpecificDayScreen());
+        return MaterialPageRoute(
+            builder: (context) => SpecificDayScreen(
+                  details: settings.arguments as CalendarTapDetails,
+                ));
       default:
         // Fallback route for undefined routes.
         return MaterialPageRoute(
