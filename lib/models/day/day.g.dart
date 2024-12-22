@@ -45,3 +45,37 @@ class DayAdapter extends TypeAdapter<Day> {
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
+
+class DaysAdapter extends TypeAdapter<Days> {
+  @override
+  final int typeId = 4;
+
+  @override
+  Days read(BinaryReader reader) {
+    final numOfFields = reader.readByte();
+    final fields = <int, dynamic>{
+      for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
+    };
+    return Days(
+      days: (fields[0] as List).cast<Day>(),
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, Days obj) {
+    writer
+      ..writeByte(1)
+      ..writeByte(0)
+      ..write(obj.days);
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DaysAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}

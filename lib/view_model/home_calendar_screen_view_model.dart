@@ -14,13 +14,22 @@ class HomeCalendarScreenViewModel extends BaseViewModel {
   late final List<Day> days;
   late final String daysKey;
 
+  bool isLoading = false;
+
   bool belongsToCurrentMonth(DateTime date) => date.month == appBarDate.month; 
 
   void initialise() async {
+    isLoading = true;
+    notifyListeners();
+    
     appBarDate = DateTime.now();
-    // daysKey = dateTimeService.formatDate(appBarDate, format: 'MM/yyyy');
-    // cellsBox = await HiveService.openBox<Days>(HiveKeys.expenseCells);
-    // HiveService.getItem(cellsBox, daysKey);
+    daysKey = dateTimeService.formatDate(appBarDate, format: 'MM/yyyy');
+    cellsBox = await HiveService.openBox<Days>(HiveKeys.expenseCells);
+    final Days? fetchedDays = HiveService.getItem<Days>(cellsBox, daysKey);
+    days = fetchedDays?.days ?? [];
+
+    isLoading = false;
+    notifyListeners();
   }
 
   void changeappBarMonth(DateTime month) {
