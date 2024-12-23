@@ -9,6 +9,8 @@ class MonthlySummaryViewModel extends BaseViewModel {
   List<Expenses?> expenses = [];
   double monthlyTotal = 0.0;
   late Box<Expenses?> expensesBox;
+  Map<String, double> categories = {};
+  List<int> colors = [];
 
   String get selectedMonthName => currentDate.month.toString();
   int get selectedYear => currentDate.year;
@@ -19,7 +21,7 @@ class MonthlySummaryViewModel extends BaseViewModel {
     await _fetchMonthlyExpenses();
   }
 
-  Future<List<Expenses?>> getValuesForMonth() async {
+  Future<void> getValuesForMonth() async {
     // Filter values for the specific month and year
     final filteredValues = expensesBox.keys
         .where((key) {
@@ -32,11 +34,24 @@ class MonthlySummaryViewModel extends BaseViewModel {
             expensesBox, key)) // Get values for matching keys
         .toList();
 
-    return filteredValues;
+    for (final expenses in filteredValues) {
+      for (final expense in expenses!.expenses) {
+        // Update the sum for the category
+        categories.update(
+          expense.category,
+          (value) => value + expense.amount,
+          ifAbsent: () => expense.amount,
+        );
+      }
+    }
+
+    monthlyTotal = categories.values.fold(0.0, (sum, value) => sum + value);
+
+    colors = List.generate(categories.length, (i) => i);
   }
 
   Future<void> _fetchMonthlyExpenses() async {
-    expenses = await getValuesForMonth();
+    await getValuesForMonth();
     // Example logic for fetching and aggregating expenses
     // Replace with actual Hive logic
 

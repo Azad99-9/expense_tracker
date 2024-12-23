@@ -1,6 +1,5 @@
 import 'package:expense_tracker/locator.dart';
 import 'package:expense_tracker/models/day/day.dart';
-import 'package:expense_tracker/services/theme_service.dart';
 import 'package:expense_tracker/view_model/home_calendar_screen_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
@@ -29,7 +28,8 @@ class HomeCalendarScreen extends StackedView<HomeCalendarScreenViewModel> {
         leadingWidth: 0,
         leading: Container(),
         backgroundColor: Theme.of(context).primaryColor,
-        title: Text(dateTimeService.getMonthYear(model.isLoading ? DateTime.now() : model.appBarDate)),
+        title: Text(dateTimeService
+            .getMonthYear(model.isLoading ? DateTime.now() : model.appBarDate)),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(
@@ -38,9 +38,9 @@ class HomeCalendarScreen extends StackedView<HomeCalendarScreenViewModel> {
             child: Row(
               children: [
                 IconButton(
-                  onPressed: model.onSearch,
+                  onPressed: model.showInfo,
                   icon: Icon(
-                    Icons.search,
+                    Icons.info_outline,
                     color: colorScheme.onPrimary,
                     size: 30,
                   ),
@@ -85,7 +85,7 @@ class HomeCalendarScreen extends StackedView<HomeCalendarScreenViewModel> {
           return Container(
             decoration: BoxDecoration(
               border: Border.all(
-                  color: colorScheme.secondary.withOpacity(0.4), width: 0.5),
+                  color: colorScheme.secondary.withOpacity(0.1), width: 0.5),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -117,7 +117,7 @@ class HomeCalendarScreen extends StackedView<HomeCalendarScreenViewModel> {
                       itemCount: dayExpenses.length,
                       itemBuilder: (context, index) => Container(
                         decoration: BoxDecoration(
-                          color: index % 2 == 0 ? Colors.blue : Colors.green,
+                          color: model.evaluateColor(index, details.date.day),
                           borderRadius: const BorderRadius.all(
                             Radius.circular(10),
                           ),

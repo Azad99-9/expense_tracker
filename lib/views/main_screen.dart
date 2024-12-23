@@ -24,7 +24,9 @@ class MainScreen extends StackedView<MainScreenViewModel> {
         index: viewModel.selectedIndex,
         children: [
           const HomeCalendarScreen(),
-          MonthlySummaryScreen(currentDate: globalDate,),
+          MonthlySummaryScreen(
+            key: ValueKey(viewModel.selectedIndex),
+            currentDate: globalDate,),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

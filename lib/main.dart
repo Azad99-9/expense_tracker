@@ -34,7 +34,7 @@ void main() async {
   const int notificationId = 0;
   await AndroidAlarmManager.periodic(
     const Duration(
-      hours: 5,
+      hours: 24,
     ),
     notificationId,
     NotificationService.scheduleNotifications,
