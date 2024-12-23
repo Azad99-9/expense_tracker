@@ -3,7 +3,6 @@
 
 Here’s the **README.md** file code:
 
-```markdown
 # Flutter App Installation Guide
 
 This guide provides step-by-step instructions to install and run the Flutter app on your local machine or mobile devices.
