@@ -1,5 +1,13 @@
 import 'package:expense_tracker/constants/routes.dart';
+import 'package:expense_tracker/main.dart';
+import 'package:expense_tracker/models/day/day.dart';
+import 'package:expense_tracker/view_model/home_calendar_screen_view_model.dart';
+import 'package:expense_tracker/views/home_calendar_screen.dart';
+import 'package:expense_tracker/views/main_screen.dart';
+import 'package:expense_tracker/views/signin_screen.dart';
+import 'package:expense_tracker/views/signup_screen.dart';
 import 'package:expense_tracker/views/specific_day_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
@@ -16,11 +24,31 @@ class AppRouter {
   /// Generates routes for the application based on route names.
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case Routes.homeCalendar:
+        return MaterialPageRoute(builder: (context) => HomeCalendarScreen());
+
+      case Routes.mainScreen:
+        return MaterialPageRoute(builder: (context) => MainScreen());
+
       case Routes.specificDay:
+        final arguments = settings.arguments as List;
         return MaterialPageRoute(
             builder: (context) => SpecificDayScreen(
-                  details: settings.arguments as CalendarTapDetails,
+                  details: arguments[0] as CalendarTapDetails,
+                  homeViewModel: arguments[1] as HomeCalendarScreenViewModel,
                 ));
+
+      case Routes.signIn:
+        return MaterialPageRoute(builder: (context) => SignIn());
+
+      case Routes.signUp:
+        return MaterialPageRoute(
+            builder: (context) => SignupScreen(
+                  user: settings.arguments as User,
+                ));
+
+      case Routes.splashScreen:
+        return MaterialPageRoute(builder: (context) => SplashScreen());
       default:
         // Fallback route for undefined routes.
         return MaterialPageRoute(

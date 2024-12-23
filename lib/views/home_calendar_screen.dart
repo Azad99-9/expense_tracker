@@ -1,4 +1,5 @@
 import 'package:expense_tracker/locator.dart';
+import 'package:expense_tracker/models/day/day.dart';
 import 'package:expense_tracker/services/theme_service.dart';
 import 'package:expense_tracker/view_model/home_calendar_screen_view_model.dart';
 import 'package:flutter/material.dart';
@@ -25,8 +26,10 @@ class HomeCalendarScreen extends StackedView<HomeCalendarScreenViewModel> {
     final textScheme = themeService.textTheme;
     return Scaffold(
       appBar: AppBar(
+        leadingWidth: 0,
+        leading: Container(),
         backgroundColor: Theme.of(context).primaryColor,
-        title: Text(dateTimeService.getMonthName(model.appBarDate)),
+        title: Text(dateTimeService.getMonthYear(model.isLoading ? DateTime.now() : model.appBarDate)),
         actions: [
           Padding(
             padding: const EdgeInsets.symmetric(
@@ -54,69 +57,97 @@ class HomeCalendarScreen extends StackedView<HomeCalendarScreenViewModel> {
           ),
         ],
       ),
-      body: Container(
-        child: SfCalendar(
-          controller: model.calendarController,
+      body: SfCalendar(
+        controller: model.calendarController,
+        cellBorderColor: themeService.colorScheme.secondary.withOpacity(0.5),
+        onViewChanged: (details) async {
+          await model.onMonthChanged(
+            details,
+          );
+        },
+        onTap: model.onTapCell,
+        monthCellBuilder: (BuildContext context, MonthCellDetails details) {
+          DateTime date = details.date;
 
-          cellBorderColor: themeService.colorScheme.secondary.withOpacity(0.5),
-          onViewChanged: (details) {
-            final visibleDates = details.visibleDates;
-            final currentDate = visibleDates[15];
-            model.changeappBarMonth(currentDate);
-          },
-          onTap: model.onTapCell,
-          // monthViewSettings: const MonthViewSettings(
-          //   showTrailingAndLeadingDates:
-          //       false, // Adjust the width of the border (optional)
-          // ),
-          monthCellBuilder: (BuildContext context, MonthCellDetails details) {
-            // Get the date for the cell
-            DateTime date = details.date;
+          bool isToday = DateTime.now().difference(date).inDays == 0 &&
+              DateTime.now().day == date.day;
 
-            // Check if the cell is today
-            bool isToday = DateTime.now().difference(date).inDays == 0 &&
-                DateTime.now().day == date.day;
-            bool currentMonth = model.belongsToCurrentMonth(details.date);
-            return Container(
-              decoration: BoxDecoration(
-                border: Border.all(
-                    color: colorScheme.secondary.withOpacity(0.4), width: 0.5),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 25,
-                    height: 25,
-                    decoration: BoxDecoration(
-                      color: isToday
-                          ? AppColors.highLightColor
-                          : Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Center(
-                      child: Text(date.day.toString(),
-                          style: textScheme.bodyMedium!.copyWith(
-                            color: currentMonth
-                                ? colorScheme.onPrimary
-                                : colorScheme.onPrimary.withOpacity(0.3),
-                            fontSize: currentMonth ? 16 : 14,
-                            fontWeight:
-                                isToday ? FontWeight.bold : FontWeight.normal,
-                          )),
+          bool currentMonth = model.belongsToCurrentMonth(details.date);
+
+          Day? cellDay = model.days.firstWhere(
+              (day) =>
+                  currentMonth &&
+                  day!.individualKey == details.date.day.toString(),
+              orElse: () => null);
+
+          List<String> dayExpenses = cellDay?.expenses ?? [];
+          final symbol = model.evaluteSymbol(cellDay);
+          return Container(
+            decoration: BoxDecoration(
+              border: Border.all(
+                  color: colorScheme.secondary.withOpacity(0.4), width: 0.5),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: isToday ? Colors.blue : Colors.transparent,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Text(date.day.toString(),
+                        style: textScheme.bodyMedium!.copyWith(
+                          color: currentMonth
+                              ? colorScheme.onPrimary
+                              : colorScheme.onPrimary.withOpacity(0.3),
+                          fontSize: currentMonth ? 12 : 10,
+                          fontWeight:
+                              isToday ? FontWeight.bold : FontWeight.normal,
+                        )),
+                  ),
+                ),
+                Center(
+                  child: Container(
+                    height: 50,
+                    child: ListView.builder(
+                      itemCount: dayExpenses.length,
+                      itemBuilder: (context, index) => Container(
+                        decoration: BoxDecoration(
+                          color: index % 2 == 0 ? Colors.blue : Colors.green,
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          dayExpenses[index],
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          style: textScheme.bodySmall!.copyWith(fontSize: 10),
+                        ),
+                      ),
                     ),
                   ),
-                ],
-              ),
-            );
-          },
-          headerHeight: 0,
-          viewHeaderStyle: ViewHeaderStyle(
-            dayTextStyle: textScheme.bodyMedium,
-          ),
-          view: CalendarView.month,
+                ),
+                symbol == null
+                    ? Container()
+                    : Container(
+                        width: 30,
+                        height: 30,
+                        child: symbol,
+                      ),
+              ],
+            ),
+          );
+        },
+        headerHeight: 0,
+        viewHeaderStyle: ViewHeaderStyle(
+          dayTextStyle: textScheme.bodyMedium,
         ),
+        view: CalendarView.month,
       ),
     );
   }

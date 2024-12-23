@@ -1,26 +1,64 @@
 import 'package:expense_tracker/constants/hive_key.dart';
+import 'package:expense_tracker/models/day/day.dart';
 import 'package:expense_tracker/models/expense/expense.dart';
 import 'package:expense_tracker/services/hive_service.dart';
+import 'package:expense_tracker/view_model/home_calendar_screen_view_model.dart';
 import 'package:hive/hive.dart';
 import 'package:stacked/stacked.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class SpecificDayViewModel extends BaseViewModel {
-  DateTime selectedDate = DateTime.now();
+  late DateTime currentDate;
   List<Expense> expenses = [];
+  late HomeCalendarScreenViewModel homeModel;
   late Box<Expenses> expensesBox;
   late final String expensesKey;
 
+  final categories = [
+    'Food',
+    'Transport',
+    'Shopping',
+    'Entertainment',
+    'Health',
+    'Education',
+    'Housing',
+    'Utilities',
+    'Insurance',
+    'Savings',
+    'Investments',
+    'Debt Repayment',
+    'Gifts',
+    'Donations',
+    'Personal Care',
+    'Clothing',
+    'Travel',
+    'Subscriptions',
+    'Miscellaneous',
+    'Childcare',
+    'Pets',
+    'Dining Out',
+    'Groceries',
+    'Internet',
+    'Phone',
+    'Maintenance',
+    'Taxes',
+  ];
+
   bool isLoading = false;
 
-  Future<void> intialise(CalendarTapDetails details) async {
+  Future<void> intialise(CalendarTapDetails details,
+      HomeCalendarScreenViewModel homeViewModel) async {
     isLoading = true;
     notifyListeners();
-    expensesBox =
-        await HiveService.openBox<Expenses>(HiveKeys.dayExpenses);
+
+    currentDate = details.date!;
+    expensesBox = await HiveService.openBox<Expenses>(HiveKeys.dayExpenses);
     expensesKey = details.date.toString();
-    final Expenses? fetchedExpenses = HiveService.getItem<Expenses>(expensesBox, expensesKey);
+    final Expenses? fetchedExpenses =
+        HiveService.getItem<Expenses>(expensesBox, expensesKey);
     expenses = fetchedExpenses?.expenses ?? [];
+    homeModel = homeViewModel;
+
     isLoading = false;
     notifyListeners();
   }
@@ -32,15 +70,17 @@ class SpecificDayViewModel extends BaseViewModel {
       title: title,
       amount: amount,
       category: category,
-      date: selectedDate,
+      date: currentDate,
       description: description,
     ));
+    updateDay();
     notifyListeners();
   }
 
   // Deleting an expense
   void deleteExpense(int index) {
     expenses.removeAt(index);
+    updateDay();
     notifyListeners();
   }
 
@@ -51,9 +91,10 @@ class SpecificDayViewModel extends BaseViewModel {
       title: title,
       amount: amount,
       category: category,
-      date: selectedDate,
+      date: currentDate,
       description: description,
     );
+    updateDay();
     notifyListeners();
   }
 
@@ -64,14 +105,26 @@ class SpecificDayViewModel extends BaseViewModel {
 
   // Update the selected date and filter expenses
   void updateSelectedDate(DateTime newDate) {
-    selectedDate = newDate;
+    currentDate = newDate;
     expenses = expenses
         .where((expense) =>
-            expense.date.year == selectedDate.year &&
-            expense.date.month == selectedDate.month &&
-            expense.date.day == selectedDate.day)
+            expense.date.year == currentDate.year &&
+            expense.date.month == currentDate.month &&
+            expense.date.day == currentDate.day)
         .toList();
+    updateDay();
     notifyListeners();
+  }
+
+  void updateDay() {
+    final newDay = Day(
+      money: getTotalExpenses().toString(),
+      expenses: expenses.take(3).map((el) => el.title).toList(),
+      individualKey: currentDate.day.toString(),
+    );
+    homeModel.days
+        .removeWhere((day) => day!.individualKey == currentDate.day.toString());
+    homeModel.days.add(newDay);
   }
 
   @override

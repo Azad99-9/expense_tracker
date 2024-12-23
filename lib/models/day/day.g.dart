@@ -17,7 +17,7 @@ class DayAdapter extends TypeAdapter<Day> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return Day(
-      expenseStatus: fields[0] as String,
+      money: fields[0] as String,
       expenses: (fields[1] as List).cast<String>(),
       individualKey: fields[2] as String,
     );
@@ -28,7 +28,7 @@ class DayAdapter extends TypeAdapter<Day> {
     writer
       ..writeByte(3)
       ..writeByte(0)
-      ..write(obj.expenseStatus)
+      ..write(obj.money)
       ..writeByte(1)
       ..write(obj.expenses)
       ..writeByte(2)
@@ -57,7 +57,7 @@ class DaysAdapter extends TypeAdapter<Days> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return Days(
-      days: (fields[0] as List).cast<Day>(),
+      days: (fields[0] as List).cast<Day?>(),
     );
   }
 

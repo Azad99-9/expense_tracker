@@ -1,12 +1,16 @@
 import 'package:expense_tracker/locator.dart';
+import 'package:expense_tracker/models/day/day.dart';
 import 'package:expense_tracker/services/theme_service.dart';
+import 'package:expense_tracker/view_model/home_calendar_screen_view_model.dart';
 import 'package:expense_tracker/view_model/specific_day_view_model.dart';
+import 'package:expense_tracker/views/home_calendar_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:stacked/stacked.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 
 class SpecificDayScreen extends StackedView<SpecificDayViewModel> {
   final CalendarTapDetails details;
+  final HomeCalendarScreenViewModel homeViewModel;
 
   @override
   SpecificDayViewModel viewModelBuilder(BuildContext context) =>
@@ -14,15 +18,13 @@ class SpecificDayScreen extends StackedView<SpecificDayViewModel> {
 
   @override
   void onViewModelReady(SpecificDayViewModel viewModel) {
-    viewModel.intialise(details);
+    viewModel.intialise(details, homeViewModel);
   }
 
   const SpecificDayScreen({
     required this.details,
+    required this.homeViewModel,
   });
-
-  
-
   @override
   Widget builder(
       BuildContext context, SpecificDayViewModel model, Widget? child) {
@@ -33,7 +35,7 @@ class SpecificDayScreen extends StackedView<SpecificDayViewModel> {
       appBar: AppBar(
         backgroundColor: themeService.primaryColor,
         title: Text(
-            '${dateTimeService.formatDate(model.selectedDate, format: 'd MMMM, y')}'),
+            '${dateTimeService.formatDate(model.currentDate, format: 'd MMMM, y')}'),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,17 +173,19 @@ class SpecificDayScreen extends StackedView<SpecificDayViewModel> {
                                                   expense.amount.toString(),
                                               initialText3: expense.category,
                                               initialText4: expense.description,
-                                              primaryAction: (controller1,
+                                              categories: model.categories,
+                                              initialCategory: expense.category,
+                                              primaryAction: (category,
+                                                  controller1,
                                                   controller2,
-                                                  controller3,
                                                   controller4) {
                                                 model.editExpense(
                                                   index,
                                                   controller1.text,
                                                   double.parse(
                                                       controller2.text),
-                                                  controller3.text,
                                                   controller4.text,
+                                                  category,
                                                 );
                                                 navigationService.pop();
                                               },
@@ -217,12 +221,13 @@ class SpecificDayScreen extends StackedView<SpecificDayViewModel> {
               initialText2: '',
               initialText3: '',
               initialText4: '',
-              primaryAction:
-                  (controller1, controller2, controller3, controller4) {
+              categories: model.categories,
+              initialCategory: model.categories[0],
+              primaryAction: (category, controller1, controller2, controller4) {
                 model.addExpense(
                   controller1.text,
                   double.parse(controller2.text),
-                  controller3.text,
+                  category,
                   controller4.text,
                 );
                 navigationService.pop();
@@ -255,8 +260,10 @@ class SpecificDayScreen extends StackedView<SpecificDayViewModel> {
     required String initialText2,
     required String initialText3,
     required String initialText4,
-    required Function(TextEditingController, TextEditingController,
-            TextEditingController, TextEditingController)
+    required List<String> categories,
+    required String initialCategory,
+    required Function(String, TextEditingController, TextEditingController,
+            TextEditingController)
         primaryAction,
     required Function() secondaryAction,
   }) {
@@ -264,10 +271,6 @@ class SpecificDayScreen extends StackedView<SpecificDayViewModel> {
       context: context,
       builder: (BuildContext context) {
         return CustomDialogWidget(
-          context: context,
-          colorScheme: colorScheme,
-          textScheme: textScheme,
-          model: model,
           title: title,
           primaryActionLabel: primaryActionLabel,
           secondaryActionLabel: secondaryActionLabel,
@@ -281,19 +284,17 @@ class SpecificDayScreen extends StackedView<SpecificDayViewModel> {
           initialText4: initialText4,
           primaryAction: primaryAction,
           secondaryAction: secondaryAction,
+          categories: categories,
+          initialCategory: initialCategory,
         );
       },
     );
   }
 }
 
-class CustomDialogWidget extends StatelessWidget {
-  CustomDialogWidget({
+class CustomDialogWidget extends StatefulWidget {
+  const CustomDialogWidget({
     super.key,
-    required this.context,
-    required this.colorScheme,
-    required this.textScheme,
-    required this.model,
     required this.title,
     required this.primaryActionLabel,
     required this.secondaryActionLabel,
@@ -301,6 +302,8 @@ class CustomDialogWidget extends StatelessWidget {
     required this.inputLabel2,
     required this.inputLabel3,
     required this.inputLabel4,
+    required this.initialCategory,
+    required this.categories,
     required this.initialText1,
     required this.initialText2,
     required this.initialText3,
@@ -309,10 +312,6 @@ class CustomDialogWidget extends StatelessWidget {
     required this.secondaryAction,
   });
 
-  final BuildContext context;
-  final ColorScheme colorScheme;
-  final TextTheme textScheme;
-  final SpecificDayViewModel model;
   final String title;
   final String primaryActionLabel;
   final String secondaryActionLabel;
@@ -320,31 +319,52 @@ class CustomDialogWidget extends StatelessWidget {
   final String inputLabel2;
   final String inputLabel3;
   final String inputLabel4;
+  final String initialCategory;
+  final List<String> categories;
   final String initialText1;
   final String initialText2;
   final String initialText3;
   final String initialText4;
-  final Function(TextEditingController, TextEditingController,
-      TextEditingController, TextEditingController) primaryAction;
+  final Function(String, TextEditingController, TextEditingController,
+      TextEditingController) primaryAction;
   final Function() secondaryAction;
 
-  final TextEditingController controller1 = TextEditingController();
-  final TextEditingController controller2 = TextEditingController();
-  final TextEditingController controller3 = TextEditingController();
-  final TextEditingController controller4 = TextEditingController();
+  @override
+  _CustomDialogWidgetState createState() => _CustomDialogWidgetState();
+}
+
+class _CustomDialogWidgetState extends State<CustomDialogWidget> {
+  late TextEditingController controller1;
+  late TextEditingController controller2;
+  late TextEditingController controller4;
+  late String selectedCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    controller1 = TextEditingController(text: widget.initialText1);
+    controller2 = TextEditingController(text: widget.initialText2);
+    controller4 = TextEditingController(text: widget.initialText4);
+    selectedCategory = widget.initialCategory;
+  }
+
+  @override
+  void dispose() {
+    controller1.dispose();
+    controller2.dispose();
+    controller4.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final themeService = Theme.of(context);
     final colorScheme = themeService.colorScheme;
     final textScheme = themeService.textTheme;
-    controller1.text = initialText1;
-    controller2.text = initialText2;
-    controller3.text = initialText3;
-    controller4.text = initialText4;
+
     return AlertDialog(
       backgroundColor: colorScheme.primary,
-      title: Text(title),
+      title: Text(widget.title),
       content: SingleChildScrollView(
         scrollDirection: Axis.vertical,
         child: Column(
@@ -352,34 +372,64 @@ class CustomDialogWidget extends StatelessWidget {
           children: [
             TextField(
               controller: controller1,
-              cursorColor: colorScheme.onPrimary,
               decoration: InputDecoration(
-                  labelText: inputLabel1,
-                  labelStyle: textScheme.bodyMedium!
-                      .copyWith(color: colorScheme.tertiary),
-                  border: InputBorder.none),
+                labelText: widget.inputLabel1,
+                labelStyle: textScheme.bodyMedium!
+                    .copyWith(color: colorScheme.tertiary),
+              ),
             ),
             TextField(
               controller: controller2,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: inputLabel2,
+                labelText: widget.inputLabel2,
                 labelStyle: textScheme.bodyMedium!
                     .copyWith(color: colorScheme.tertiary),
               ),
             ),
-            TextField(
-              controller: controller3,
+            DropdownButtonFormField<String>(
+              value: selectedCategory,
+              selectedItemBuilder: (BuildContext context) {
+                return widget.categories
+                    .map((category) => Text(
+                          category,
+                          style: textScheme.bodyMedium!.copyWith(
+                              color: Colors
+                                  .white), // White color for selected item
+                        ))
+                    .toList();
+              },
+              items: widget.categories
+                  .map((category) => DropdownMenuItem(
+                        value: category,
+                        child: Text(
+                          category,
+                          style: textScheme.bodyMedium!
+                              .copyWith(color: colorScheme.tertiary),
+                        ),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedCategory = value!;
+                });
+              },
               decoration: InputDecoration(
-                labelText: inputLabel3,
+                labelText: widget.inputLabel3,
                 labelStyle: textScheme.bodyMedium!
-                    .copyWith(color: colorScheme.tertiary),
+                    .copyWith(color: colorScheme.tertiary), // Label color
+                border: InputBorder.none,
+              ),
+              dropdownColor: colorScheme.surface,
+              style: textScheme.bodyMedium!.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold, // Making the selected label thick
               ),
             ),
             TextField(
               controller: controller4,
               decoration: InputDecoration(
-                labelText: inputLabel4,
+                labelText: widget.inputLabel4,
                 labelStyle: textScheme.bodyMedium!
                     .copyWith(color: colorScheme.tertiary),
               ),
@@ -389,30 +439,35 @@ class CustomDialogWidget extends StatelessWidget {
       ),
       actions: [
         TextButton(
+          style: ButtonStyle(
+            backgroundColor:
+                MaterialStateProperty.all(Colors.redAccent), // Use proper color
+          ),
           onPressed: () {
-            navigationService.pop();
+            Navigator.of(context).pop();
           },
           child: Text(
-            secondaryActionLabel,
+            widget.secondaryActionLabel,
             style: textScheme.bodyLarge!.copyWith(
               color: colorScheme.onPrimary,
             ),
           ),
-          style: ButtonStyle(
-            backgroundColor: WidgetStatePropertyAll(colorScheme.error),
-          ),
         ),
         TextButton(
-          style: const ButtonStyle(
-            backgroundColor: WidgetStatePropertyAll(
-              AppColors.successColor,
-            ),
+          style: ButtonStyle(
+            backgroundColor: MaterialStateProperty.all(
+                Colors.greenAccent), // Use proper color
           ),
           onPressed: () {
-            primaryAction(controller1, controller2, controller3, controller4);
+            widget.primaryAction(
+              selectedCategory,
+              controller1,
+              controller2,
+              controller4,
+            );
           },
           child: Text(
-            primaryActionLabel,
+            widget.primaryActionLabel,
             style: textScheme.bodyLarge,
           ),
         ),

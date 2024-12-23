@@ -19,8 +19,8 @@ class DateTimeService {
   }
 
   /// Gets the name of the current month (e.g., 'January', 'February')
-  String getMonthName(DateTime date) {
-    return DateFormat('MMMM').format(date);
+  String getMonthYear(DateTime date) {
+    return DateFormat('MMMM yyyy').format(date);
   }
 
   /// Formats a DateTime to a specific format (default is 'yyyy-MM-dd')

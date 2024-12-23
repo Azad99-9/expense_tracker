@@ -5,7 +5,7 @@ part 'day.g.dart'; // Required for code generation
 @HiveType(typeId: 1) // Assign a unique typeId for this model
 class Day {
   @HiveField(0)
-  final String expenseStatus;
+  final String money;
 
   @HiveField(1)
   final List<String> expenses; // List of expense titles (max 3)
@@ -14,7 +14,7 @@ class Day {
   final String individualKey;
 
   Day({
-    required this.expenseStatus,
+    required this.money,
     required this.expenses,
     required this.individualKey,
   });
@@ -22,7 +22,7 @@ class Day {
   // From JSON constructor
   factory Day.fromJson(Map<String, dynamic> json) {
     return Day(
-      expenseStatus: json['expenseStatus'] as String,
+      money: json['money'] as String,
       expenses: List<String>.from(json['expenses'] ?? []),
       individualKey: json['individualKey'] as String,
     );
@@ -31,7 +31,7 @@ class Day {
   // To JSON method
   Map<String, dynamic> toJson() {
     return {
-      'expenseStatus': expenseStatus,
+      'money': money,
       'expenses': expenses,
       'individualKey': individualKey,
     };
@@ -41,7 +41,7 @@ class Day {
 @HiveType(typeId: 4)  // Unique typeId for Days class
 class Days {
   @HiveField(0)
-  List<Day> days;
+  List<Day?> days;
 
   Days({required this.days});
 }

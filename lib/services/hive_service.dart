@@ -12,7 +12,7 @@ class HiveService {
     Hive.registerAdapter(DayAdapter());
     Hive.registerAdapter(ExpenseAdapter());
     Hive.registerAdapter(ExpensesAdapter());
-    // Hive.registerAdapter(Days());
+    Hive.registerAdapter(DaysAdapter());
 
     await openBox<Expenses>(HiveKeys.dayExpenses);
     await openBox<Days>(HiveKeys.expenseCells);
