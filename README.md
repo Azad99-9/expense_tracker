@@ -1,7 +1,5 @@
 # Report Link [Click here](https://flutter.dev/docs/get-started/install)
 
-Here’s the **README.md** file code:
-
 # Flutter App Installation Guide
 
 This guide provides step-by-step instructions to install and run the Flutter app on your local machine or mobile devices.
