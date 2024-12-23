@@ -1,5 +1,4 @@
-# Report Link
-**[Click here](https://flutter.dev/docs/get-started/install)**
+# Report Link [Click here](https://flutter.dev/docs/get-started/install)**
 
 Here’s the **README.md** file code:
 
@@ -97,6 +96,3 @@ Release mode is optimized for performance and used for production builds.
 ---
 
 Enjoy using the app! 😊
-```
-
-Copy this into a file named **README.md** in your Flutter project’s root directory.
